@@ -1,0 +1,135 @@
+{
+    "name": "vscode-task-manager",
+    "publisher": "cnshenj",
+    "license": "SEE LICENSE IN LICENSE",
+    "displayName": "Task Manager",
+    "description": "Manages tasks in Visual Studio Code.",
+    "keywords": [
+        "task",
+        "manage"
+    ],
+    "version": "0.1.0",
+    "repository": {
+        "url": "https://github.com/cnshenj/vscode-task-manager"
+    },
+    "engines": {
+        "vscode": "^1.25.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onView:task-manager-tasks"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "task-manager-tasks.refresh",
+                "title": "Refresh Tasks",
+                "category": "Task Manager",
+                "icon": {
+                    "dark": "resources/refresh-inverse.svg",
+                    "light": "resources/refresh.svg"
+                }
+            },
+            {
+                "command": "task-manager-tasks.configure",
+                "title": "Configure Task",
+                "category": "Task Manager",
+                "icon": {
+                    "dark": "resources/configure-inverse.svg",
+                    "light": "resources/configure.svg"
+                }
+            },
+            {
+                "command": "task-manager-tasks.terminateAll",
+                "title": "Terminate All Running Tasks",
+                "category": "Task Manager",
+                "icon": {
+                    "dark": "resources/stop-inverse.svg",
+                    "light": "resources/stop.svg"
+                }
+            },
+            {
+                "command": "task-manager-tasks.run",
+                "title": "Run Task",
+                "category": "Task Manager",
+                "icon": {
+                    "dark": "resources/start-inverse.svg",
+                    "light": "resources/start.svg"
+                }
+            },
+            {
+                "command": "task-manager-tasks.terminate",
+                "title": "Terminate Task",
+                "category": "Task Manager",
+                "icon": {
+                    "dark": "resources/stop-inverse.svg",
+                    "light": "resources/stop.svg"
+                }
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "task-manager",
+                    "title": "Task Manager",
+                    "icon": "resources/task.svg"
+                }
+            ]
+        },
+        "views": {
+            "task-manager": [
+                {
+                    "id": "task-manager-tasks",
+                    "name": "Tasks"
+                }
+            ]
+        },
+        "menus": {
+            "view/title": [
+                {
+                    "command": "task-manager-tasks.refresh",
+                    "when": "view == task-manager-tasks",
+                    "group": "navigation"
+                },
+                {
+                    "command": "task-manager-tasks.configure",
+                    "when": "view == task-manager-tasks",
+                    "group": "navigation"
+                },
+                {
+                    "command": "task-manager-tasks.terminateAll",
+                    "when": "view == task-manager-tasks"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "task-manager-tasks.run",
+                    "when": "view == task-manager-tasks && viewItem == task",
+                    "group": "inline"
+                },
+                {
+                    "command": "task-manager-tasks.terminate",
+                    "when": "view == task-manager-tasks && viewItem == runningTask",
+                    "group": "inline"
+                }
+            ]
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    },
+    "devDependencies": {
+        "typescript": "^3.3.1",
+        "vscode": "^1.1.28",
+        "tslint": "^5.12.1",
+        "@types/node": "^10.12.21",
+        "@types/mocha": "^2.2.42"
+    }
+}
