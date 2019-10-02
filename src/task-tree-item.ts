@@ -37,8 +37,8 @@ export class TaskTreeItem extends vscode.TreeItem {
 
         if (this.execution) {
             this.iconPath = {
-                dark: path.join(basePath, `sync-inverse.svg`),
-                light: path.join(basePath, `sync.svg`)
+                dark: path.join(basePath, `sync-dark.svg`),
+                light: path.join(basePath, `sync-light.svg`)
             };
         }
     }

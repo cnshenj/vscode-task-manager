@@ -9,7 +9,7 @@
         "manage"
     ],
     "icon": "images/logo.png",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "repository": {
         "url": "https://github.com/cnshenj/vscode-task-manager"
     },
@@ -30,8 +30,8 @@
                 "title": "Refresh Tasks",
                 "category": "Task Manager",
                 "icon": {
-                    "dark": "resources/refresh-inverse.svg",
-                    "light": "resources/refresh.svg"
+                    "dark": "resources/refresh-dark.svg",
+                    "light": "resources/refresh-light.svg"
                 }
             },
             {
@@ -39,8 +39,8 @@
                 "title": "Configure Task",
                 "category": "Task Manager",
                 "icon": {
-                    "dark": "resources/configure-inverse.svg",
-                    "light": "resources/configure.svg"
+                    "dark": "resources/configure-dark.svg",
+                    "light": "resources/configure-light.svg"
                 }
             },
             {
@@ -48,8 +48,8 @@
                 "title": "Terminate All Running Tasks",
                 "category": "Task Manager",
                 "icon": {
-                    "dark": "resources/stop-inverse.svg",
-                    "light": "resources/stop.svg"
+                    "dark": "resources/stop-dark.svg",
+                    "light": "resources/stop-light.svg"
                 }
             },
             {
@@ -57,8 +57,8 @@
                 "title": "Run Task",
                 "category": "Task Manager",
                 "icon": {
-                    "dark": "resources/start-inverse.svg",
-                    "light": "resources/start.svg"
+                    "dark": "resources/start-dark.svg",
+                    "light": "resources/start-light.svg"
                 }
             },
             {
@@ -66,8 +66,8 @@
                 "title": "Terminate Task",
                 "category": "Task Manager",
                 "icon": {
-                    "dark": "resources/stop-inverse.svg",
-                    "light": "resources/stop.svg"
+                    "dark": "resources/stop-dark.svg",
+                    "light": "resources/stop-light.svg"
                 }
             }
         ],
@@ -127,10 +127,10 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {
-        "typescript": "^3.3.1",
-        "vscode": "^1.1.28",
-        "tslint": "^5.12.1",
-        "@types/node": "^10.12.21",
-        "@types/mocha": "^2.2.42"
+        "typescript": "^3.6.3",
+        "vscode": "^1.1.36",
+        "tslint": "^5.20.0",
+        "@types/node": "^10.14.19",
+        "@types/mocha": "^2.2.48"
     }
 }

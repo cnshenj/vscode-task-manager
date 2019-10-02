@@ -18,6 +18,13 @@ Manages tasks in Visual Studio Code in a custom activity view.
 
 ## Release Notes
 
+### 0.2.0
+Updated icons to match the new vscode style.
+
 ### 0.1.0
 
 Initial release.
+
+## Credits
+- The extension icon (task.svg) is made by [Pixel perfect](https://www.flaticon.com/authors/pixel-perfect) from [Flaticon](https://www.flaticon.com/).
+- The sync icon (sync.svg) is made by [Those Icons](https://www.flaticon.com/authors/those-icons) from [Flaticon](https://www.flaticon.com/).
