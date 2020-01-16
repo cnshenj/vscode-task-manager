@@ -1,21 +1,10 @@
 import * as vscode from 'vscode';
+import { compareStrings } from './helpers';
+import { TaskScope } from './task-scope';
+import { TaskSource } from './task-source';
 import { TaskTreeItem } from "./task-tree-item";
 
 const taskFileRegExp = /\/(?:\.vscode\/tasks\.json|Gruntfile\.coffee|Gruntfile\.js|gulpfile\.js|package\.json|tsconfig(?:\.[^.]+)*\.json)$/;
-
-function compareStrings(a: string, b: string): number {
-    return a < b ? -1 : (a > b ? 1 : 0);
-}
-
-function compareSources(a: string, b: string): number {
-    if (a === TaskTreeItem.defaultSource) {
-        return b === TaskTreeItem.defaultSource ? 0 : -1;
-    } else if (b === TaskTreeItem.defaultSource) {
-        return 1;
-    }
-
-    return compareStrings(a, b);
-}
 
 function compareTasks(a: vscode.Task, b: vscode.Task): number {
     return compareStrings(a.name, b.name);
@@ -45,20 +34,56 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
         return element;
     }
 
-    public getChildren(element?: TaskTreeItem): Thenable<TaskTreeItem[]> {
-        const getChildItems = element ? this.getTasks.bind(undefined, element) : this.getTaskSources;
-        return vscode.tasks.fetchTasks().then(getChildItems);
+    public async getChildren(element?: TaskTreeItem): Promise<TaskTreeItem[]> {
+        const tasks = await vscode.tasks.fetchTasks();
+        if (element) {
+            if (element.taskSource) {
+                return TaskTreeDataProvider.getTasks(tasks, element.taskSource);
+            } else {
+                return TaskTreeDataProvider.getTaskSources(tasks, element.taskScope);
+            }
+        } else {
+            const scopeNames = new Set<string>();
+            tasks.forEach(task => scopeNames.add(TaskScope.getScopeName(task.scope)));
+            if (scopeNames.size <= 1) {
+                return TaskTreeDataProvider.getTaskSources(tasks);
+            } else {
+                return TaskTreeDataProvider.getTaskScopes(tasks);
+            }
+        }
     }
 
-    private getTaskSources = (tasks: vscode.Task[]): TaskTreeItem[] => {
-        const sources = new Set<string>();
-        tasks.forEach(task => sources.add(task.source));
-        return Array.from(sources.values()).sort(compareSources).map(source => new TaskTreeItem(source));
+    private static getTaskScopes(tasks: vscode.Task[]): TaskTreeItem[] {
+        const scopes: { [name: string]: TaskScope } = {};
+        tasks.forEach(task => {
+            const scopeName = TaskScope.getScopeName(task.scope);
+            if (!(scopeName in scopes)) {
+                scopes[scopeName] = new TaskScope(task.scope || vscode.TaskScope.Global);
+            }
+        });
+
+        return Object.keys(scopes)
+            .map(name => scopes[name])
+            .sort(TaskScope.compare)
+            .map(scope => new TaskTreeItem(scope));
     }
 
-    private getTasks = (parent: TaskTreeItem, tasks: vscode.Task[]): TaskTreeItem[] => {
+    private static getTaskSources(tasks: vscode.Task[], taskScope?: TaskScope): TaskTreeItem[] {
+        const sources: { [name: string]: TaskSource } = {};
+        tasks.forEach(task => {
+            if ((!taskScope || task.scope === taskScope.data) && !(task.source in sources)) {
+                sources[task.source] = new TaskSource(task.source, taskScope);
+            }
+        });
+        return Object.keys(sources)
+            .map(name => sources[name])
+            .sort(TaskSource.compare)
+            .map(source => new TaskTreeItem(source));
+    }
+
+    private static getTasks(tasks: vscode.Task[], taskSource: TaskSource): TaskTreeItem[] {
         return tasks
-            .filter(task => task.source === parent.taskSource)
+            .filter(task => task.source === taskSource.name && (!taskSource.taskScope || taskSource.taskScope.equals(task.scope)))
             .sort(compareTasks)
             .map(task => new TaskTreeItem(task));
     }
