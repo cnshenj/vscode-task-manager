@@ -4,10 +4,10 @@ Manages tasks in Visual Studio Code in a custom activity view.
 
 ## Features
 
-- List all detected tasks grouped by sources
+- List all detected tasks grouped by sources, and by root folders
   * The task list is automatically refreshed when a common task file is changed (e.g. gulpfile.js)
 - Run/terminate tasks directly in the custom activity view
-- Running tasks are indicated by an icon
+- Running tasks are indicated by an animated icon
 
 ### Screenshot
 ![Screenshot](images/screenshot.png)
@@ -18,11 +18,14 @@ Manages tasks in Visual Studio Code in a custom activity view.
 
 ## Release Notes
 
+### 0.3.0
+- Tasks from different root folders in multi-root workspaces are separated.
+- Animated running task icon.
+
 ### 0.2.0
 Updated icons to match the new vscode style.
 
 ### 0.1.0
-
 Initial release.
 
 ## Credits
