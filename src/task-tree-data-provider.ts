@@ -26,7 +26,7 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
 
     public refresh = (fileUri?: vscode.Uri): void => {
         if (!fileUri || taskFileRegExp.test(fileUri.path)) {
-            this._onDidChangeTreeData.fire();
+            this._onDidChangeTreeData.fire(undefined);
         }
     }
 
@@ -88,7 +88,7 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
             .map(task => new TaskTreeItem(task));
     }
 
-    private setupWatchers(added?: vscode.WorkspaceFolder[], removed?: vscode.WorkspaceFolder[]) {
+    private setupWatchers(added?: readonly vscode.WorkspaceFolder[], removed?: readonly vscode.WorkspaceFolder[]) {
         if (!added && !removed) {
             added = vscode.workspace.workspaceFolders;
         }
