@@ -6,8 +6,19 @@ import { TaskSource } from "./task-source";
 type TaskData = vscode.Task | TaskSource | TaskScope;
 
 const basePath = path.join(__dirname, "..", "resources");
-const taskSourcePath = path.join(basePath, "task-sources");
-const taskSourceIcons = new Set<string>(["grunt", "gulp", "npm", "tsc"]);
+const taskSourceFileNames: { [key: string]: string } = {
+    "ant": "build.xml",
+    "gradle": "build.gradle",
+    "grunt": "Gruntfile.js",
+    "gulp": "gulpfile.js",
+    "jake": "jakefile.js",
+    "maven": "pom.xml",
+    "npm": "package.json",
+    "rake": "Rakefile",
+    "rust": "main.rs",
+    "tsc": "tsconfig.json",
+    "workspace": "tasks.json"
+};
 
 export class TaskTreeItem extends vscode.TreeItem {
     public readonly taskScope: TaskScope | undefined;
@@ -16,19 +27,21 @@ export class TaskTreeItem extends vscode.TreeItem {
     public readonly execution: vscode.TaskExecution | undefined;
 
     constructor(data: TaskData) {
-        super(TaskTreeItem.getItemName(data), TaskTreeItem.getInitialCollapsibleState(data));
+        super(TaskTreeItem.getItemLabel(data), TaskTreeItem.getInitialCollapsibleState(data));
 
         if (data instanceof TaskScope) {
             this.taskScope = data;
             this.tooltip = data.description;
         } else if (data instanceof TaskSource) {
             this.taskSource = data;
-            const taskSourceName = this.taskSource.name;
-            const iconName = taskSourceIcons.has(taskSourceName)
-                ? taskSourceName
-                : (taskSourceName === TaskSource.defaultName ? "vscode" : "default");
-            const iconPath = path.join(taskSourcePath, `task-source-${iconName}.svg`);
-            this.iconPath = { dark: iconPath, light: iconPath };
+            this.tooltip = this.label;
+            const taskSourceFileName = taskSourceFileNames[this.label!.toLowerCase()];
+            if (taskSourceFileName) {
+                this.iconPath = vscode.ThemeIcon.File;
+                this.resourceUri = vscode.Uri.file(`/${taskSourceFileName}`);
+            } else {
+                this.iconPath = vscode.ThemeIcon.Folder;
+            }
         } else {
             this.task = data;
             this.execution = vscode.tasks.taskExecutions.find(
@@ -45,11 +58,11 @@ export class TaskTreeItem extends vscode.TreeItem {
         }
     }
 
-    private static getItemName(data: TaskData): string {
+    private static getItemLabel(data: TaskData): string {
         if (typeof data === "string") {
             return data;
         } else if (typeof data === "object" && "name" in data) {
-            return data.name;
+            return data.name ?? "";
         } else {
             return "";
         }
