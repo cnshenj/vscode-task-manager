@@ -15,3 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Tasks from different root folders in multi-root workspaces are separated.
 - Animated running task icon.
+
+## [0.4.0]
+### Changed
+- Use theme icons provided by vscode instead of custom icons for task sources.

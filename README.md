@@ -18,6 +18,9 @@ Manages tasks in Visual Studio Code in a custom activity view.
 
 ## Release Notes
 
+### 0.4.0
+- Use theme icons provided by vscode instead of custom icons for task sources.
+
 ### 0.3.0
 - Tasks from different root folders in multi-root workspaces are separated.
 - Animated running task icon.
