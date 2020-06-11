@@ -18,9 +18,13 @@ jobs:
         node-version: "14.x"
     - run: npm ci
     - run: npm install vsce ovsx
-    - run: ./node_modules/.bin/vsce publish
+    - name: Publish to VSCode Marketplace
+      if: ${{ !cancelled() }}
+      run: ./node_modules/.bin/vsce publish
       env:
         VSCE_PAT: ${{ secrets.ADO_PAT }}
-    - run: ./node_modules/.bin/ovsx publish
+    - name: Publish to Open VSX Registry
+      if: ${{ !cancelled() }}
+      run: ./node_modules/.bin/ovsx publish
       env:
         OVSX_PAT: ${{ secrets.OVSX_PAT }}
