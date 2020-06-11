@@ -1,0 +1,26 @@
+name: Publish Extension
+
+on:
+  release:
+    types:
+      - published
+      - edited
+
+jobs:
+  publish_extension:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: "14.x"
+    - run: npm ci
+    - run: npm install vsce ovsx
+    - run: ./node_modules/.bin/vsce publish
+      env:
+        VSCE_PAT: ${{ secrets.ADO_PAT }}
+    - run: ./node_modules/.bin/ovsx publish
+      env:
+        OVSX_PAT: ${{ secrets.OVSX_PAT }}
