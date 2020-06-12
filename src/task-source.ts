@@ -1,6 +1,36 @@
 import { compareStrings } from "./helpers";
 import { TaskScope } from "./task-scope";
 
+export const taskSourceMappings: { [key: string]: string } = {
+    "ant": "build.xml",
+    "gradle": "build.gradle",
+    "grunt": "Gruntfile.js",
+    "gulp": "gulpfile.js",
+    "jake": "jakefile.js",
+    "maven": "pom.xml",
+    "npm": "package.json",
+    "rake": "Rakefile",
+    "rust": "main.rs",
+    "tsc": "tsconfig.json",
+    "workspace": "tasks.json"
+};
+
+const taskFilePatterns = [
+    /build\.xml/, // Ant
+    /build\.gradle/, //Gradle
+    /Gruntfile\.(?:coffee|js)/, // Grunt
+    /gulpfile\.js/, // Gulp
+    /Jakefile(?:\.js)?/, // Jake
+    /pom\.xml/, // Maven
+    /package\.json/, // NPM
+    /Rakefile/, // Rake
+    /Cargo\.toml/, // Rust Cargo
+    /tsconfig(?:\.[^.]+)*\.json/, // TypeScript
+    /\.vscode[\\/]tasks\.json/ // Workspace
+];
+
+export const taskFileRegExp = new RegExp(`/(?:${taskFilePatterns.map(p => p.source).join("|")})$`, "i");
+
 export class TaskSource {
     public static readonly defaultName = "Workspace";
 

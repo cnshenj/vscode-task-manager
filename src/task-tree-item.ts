@@ -1,24 +1,11 @@
 import * as path from "path";
 import * as vscode from 'vscode';
 import { TaskScope } from "./task-scope";
-import { TaskSource } from "./task-source";
+import { TaskSource, taskSourceMappings } from "./task-source";
 
 type TaskData = vscode.Task | TaskSource | TaskScope;
 
 const basePath = path.join(__dirname, "..", "resources");
-const taskSourceFileNames: { [key: string]: string } = {
-    "ant": "build.xml",
-    "gradle": "build.gradle",
-    "grunt": "Gruntfile.js",
-    "gulp": "gulpfile.js",
-    "jake": "jakefile.js",
-    "maven": "pom.xml",
-    "npm": "package.json",
-    "rake": "Rakefile",
-    "rust": "main.rs",
-    "tsc": "tsconfig.json",
-    "workspace": "tasks.json"
-};
 
 export class TaskTreeItem extends vscode.TreeItem {
     public readonly taskScope: TaskScope | undefined;
@@ -35,7 +22,7 @@ export class TaskTreeItem extends vscode.TreeItem {
         } else if (data instanceof TaskSource) {
             this.taskSource = data;
             this.tooltip = this.label;
-            const taskSourceFileName = taskSourceFileNames[this.label!.toLowerCase()];
+            const taskSourceFileName = taskSourceMappings[this.label!.toLowerCase()];
             if (taskSourceFileName) {
                 this.iconPath = vscode.ThemeIcon.File;
                 this.resourceUri = vscode.Uri.file(`/${taskSourceFileName}`);

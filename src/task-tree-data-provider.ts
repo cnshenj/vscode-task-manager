@@ -1,10 +1,8 @@
 import * as vscode from 'vscode';
 import { compareStrings } from './helpers';
 import { TaskScope } from './task-scope';
-import { TaskSource } from './task-source';
+import { taskFileRegExp, TaskSource } from './task-source';
 import { TaskTreeItem } from "./task-tree-item";
-
-const taskFileRegExp = /\/(?:\.vscode\/tasks\.json|Gruntfile\.coffee|Gruntfile\.js|gulpfile\.js|package\.json|tsconfig(?:\.[^.]+)*\.json)$/;
 
 function compareTasks(a: vscode.Task, b: vscode.Task): number {
     return compareStrings(a.name, b.name);
@@ -28,7 +26,7 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
         if (!fileUri || taskFileRegExp.test(fileUri.path)) {
             this._onDidChangeTreeData.fire(undefined);
         }
-    }
+    };
 
     public getTreeItem(element: TaskTreeItem): vscode.TreeItem {
         return element;
