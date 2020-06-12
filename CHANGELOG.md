@@ -23,3 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.1]
 ### Changed
 - Bundle the extension using webpack.
+
+## [0.4.2]
+### Changed
+- Use built-in codion in commands.
+### Fixed
+- Fix missing icon for tasks in execution.

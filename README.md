@@ -18,6 +18,10 @@ Manages tasks in Visual Studio Code in a custom activity view.
 
 ## Release Notes
 
+### 0.4.2
+- Use built-in codicon in commands.
+- Fix a bug that doesn't show icon for tasks in execution.
+
 ### 0.4.1
 - Bundle the extension using webpack.
 
