@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 0 16 16" width="16" version="1.1">
   <g>
-    <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 8 8" to="360 8 8" dur="1s" repeatCount="indefinite">
+    <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 8 8" to="360 8 8" dur="2s" repeatCount="indefinite">
     </animateTransform>
     <path d="m 1.9999809,8.0000004 c 0,-2.9650777 2.1697376,-5.4109024 4.9999941,-5.8916019 V 3.0000063 L 8.9999669,1.5000197 7.0000041,4e-6 v 1.0809786 c -3.3866115,0.4878701 -6.00000458,3.400111 -6.00000458,6.9190178 0,2.5291736 1.35308848,4.7429806 3.36901848,5.9731506 L 5.2384169,13.321109 C 3.3169545,12.319821 2.00001,10.312572 1.9999809,8.0000004 Z" style="stroke-width:0.04;fill:#00539c;fill-opacity:1" />
     <path d="M 15,8.0000004 C 15,5.4708269 13.646912,3.2570199 11.630982,2.0268498 l -0.869399,0.6520418 c 1.921462,1.0012878 3.238407,3.0085375 3.238407,5.3211088 0,2.9658906 -2.168634,5.4188276 -4.9999941,5.8984246 v -0.898489 l -1.9999918,1.499987 1.9999918,1.500074 V 14.918292 C 12.386346,14.430364 14.999971,11.518878 15,8.0000004 Z" style="stroke-width:0.04;fill:#00539c;fill-opacity:1" />
