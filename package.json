@@ -29,46 +29,31 @@
                 "command": "task-manager-tasks.refresh",
                 "title": "Refresh Tasks",
                 "category": "Task Manager",
-                "icon": {
-                    "dark": "resources/refresh-dark.svg",
-                    "light": "resources/refresh-light.svg"
-                }
+                "icon": "$(refresh)"
             },
             {
                 "command": "task-manager-tasks.configure",
                 "title": "Configure Task",
                 "category": "Task Manager",
-                "icon": {
-                    "dark": "resources/configure-dark.svg",
-                    "light": "resources/configure-light.svg"
-                }
+                "icon": "$(gear)"
             },
             {
                 "command": "task-manager-tasks.terminateAll",
                 "title": "Terminate All Running Tasks",
                 "category": "Task Manager",
-                "icon": {
-                    "dark": "resources/stop-dark.svg",
-                    "light": "resources/stop-light.svg"
-                }
+                "icon": "$(debug-stop)"
             },
             {
                 "command": "task-manager-tasks.run",
                 "title": "Run Task",
                 "category": "Task Manager",
-                "icon": {
-                    "dark": "resources/start-dark.svg",
-                    "light": "resources/start-light.svg"
-                }
+                "icon": "$(debug-start)"
             },
             {
                 "command": "task-manager-tasks.terminate",
                 "title": "Terminate Task",
                 "category": "Task Manager",
-                "icon": {
-                    "dark": "resources/stop-dark.svg",
-                    "light": "resources/stop-light.svg"
-                }
+                "icon": "$(debug-stop)"
             }
         ],
         "viewsContainers": {
