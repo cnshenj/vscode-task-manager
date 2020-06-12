@@ -9,7 +9,7 @@
         "manage"
     ],
     "icon": "images/logo.png",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "repository": {
         "url": "https://github.com/cnshenj/vscode-task-manager"
     },
@@ -22,7 +22,7 @@
     "activationEvents": [
         "onView:task-manager-tasks"
     ],
-    "main": "./out/extension.js",
+    "main": "./dist/extension.js",
     "contributes": {
         "commands": [
             {
@@ -120,24 +120,29 @@
         }
     },
     "scripts": {
-        "vscode:prepublish": "npm run compile",
+        "vscode:prepublish": "webpack --mode production",
         "compile": "tsc -p ./",
         "lint": "eslint src --ext ts",
-        "watch": "tsc -watch -p ./",
+        "webpack": "webpack --mode development",
+        "watch": "webpack --mode development --watch",
         "pretest": "npm run compile && npm run lint",
         "test": "node ./out/test/runTest.js"
     },
     "devDependencies": {
-        "@types/vscode": "^1.25.0",
         "@types/glob": "^7.1.2",
         "@types/mocha": "^7.0.2",
         "@types/node": "^13.11.0",
-        "eslint": "^7.2.0",
-        "@typescript-eslint/parser": "^3.2.0",
+        "@types/vscode": "^1.25.0",
+        "@types/webpack": "^4.41.17",
         "@typescript-eslint/eslint-plugin": "^3.2.0",
+        "@typescript-eslint/parser": "^3.2.0",
+        "eslint": "^7.2.0",
         "glob": "^7.1.6",
         "mocha": "^7.2.0",
+        "ts-loader": "^7.0.5",
         "typescript": "^3.9.5",
-        "vscode-test": "^1.4.0"
+        "vscode-test": "^1.4.0",
+        "webpack": "^4.43.0",
+        "webpack-cli": "^3.3.11"
     }
 }

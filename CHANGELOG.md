@@ -19,3 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0]
 ### Changed
 - Use theme icons provided by vscode instead of custom icons for task sources.
+
+## [0.4.1]
+### Changed
+- Bundle the extension using webpack.

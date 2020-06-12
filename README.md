@@ -18,6 +18,9 @@ Manages tasks in Visual Studio Code in a custom activity view.
 
 ## Release Notes
 
+### 0.4.1
+- Bundle the extension using webpack.
+
 ### 0.4.0
 - Use theme icons provided by vscode instead of custom icons for task sources.
 

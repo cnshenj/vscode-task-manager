@@ -6,7 +6,20 @@
         {
             "type": "npm",
             "script": "watch",
-            "problemMatcher": "$tsc-watch",
+            "problemMatcher": [
+                "$tsc",
+                {
+                    "owner": "webpack",
+                    "pattern": {
+                        "regexp": ""
+                    },
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": "^Version: webpack",
+                        "endsPattern": "^Built at:"
+                    }
+                }
+            ],
             "isBackground": true,
             "presentation": {
                 "reveal": "never"
