@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
+import { restartingTaskIds } from "./storage";
 import { TaskTreeDataProvider } from "./task-tree-data-provider";
 import { TaskTreeItem } from './task-tree-item';
 
@@ -28,15 +29,33 @@ export function activate(context: vscode.ExtensionContext) {
                 taskTreeItem.execution.terminate();
             }
         });
+    const restartTaskCommand = vscode.commands.registerCommand(
+        "task-manager-tasks.restart",
+        (taskTreeItem: TaskTreeItem) => {
+            if (taskTreeItem.execution) {
+                const task = taskTreeItem.execution.task!;
+                restartingTaskIds.add(`${task.source}/${task.name}`);
+                taskTreeItem.execution.terminate();
+            }
+        });
 
     context.subscriptions.push(refreshTasksCommand);
     context.subscriptions.push(configureTaskCommand);
     context.subscriptions.push(terminateAllTasksCommand);
     context.subscriptions.push(runTaskCommand);
     context.subscriptions.push(terminateTaskCommand);
+    context.subscriptions.push(restartTaskCommand);
 
     vscode.tasks.onDidStartTask(() => taskTreeDataProvider.refresh());
-    vscode.tasks.onDidEndTask(() => taskTreeDataProvider.refresh());
+    vscode.tasks.onDidEndTask((event) => {
+        taskTreeDataProvider.refresh();
+        const task = event.execution.task;
+        const taskId = `${task.source}/${task.name}`;
+        if (restartingTaskIds.has(taskId)) {
+            restartingTaskIds.delete(taskId);
+            vscode.tasks.executeTask(event.execution.task);
+        }
+    });
     vscode.window.registerTreeDataProvider("task-manager-tasks", taskTreeDataProvider);
 }
 

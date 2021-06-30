@@ -29,3 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use built-in codion in commands.
 ### Fixed
 - Fix missing icon for tasks in execution.
+
+## [0.5.0]
+### Added
+- Menu item to restart running tasks
