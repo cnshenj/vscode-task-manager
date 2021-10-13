@@ -8,6 +8,7 @@ Manages tasks in Visual Studio Code in a custom activity view.
   * The task list is automatically refreshed when a common task file is changed (e.g. gulpfile.js)
 - Run/terminate tasks directly in the custom activity view
 - Running tasks are indicated by an animated icon
+- Exclude tasks using a regular expression pattern `taskManager.exclude`
 
 ### Screenshot
 ![Screenshot](images/screenshot.png)
@@ -18,8 +19,11 @@ Manages tasks in Visual Studio Code in a custom activity view.
 
 ## Release Notes
 
+### 0.6.0
+- Added configuration `taskManager.exclude`.
+
 ### 0.5.0
-- Added menu item to restart running tasks
+- Added menu item to restart running tasks.
 
 ### 0.4.2
 - Use built-in codicon in commands.

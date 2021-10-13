@@ -21,8 +21,11 @@ export class TaskTreeItem extends vscode.TreeItem {
             this.tooltip = data.description;
         } else if (data instanceof TaskSource) {
             this.taskSource = data;
-            this.tooltip = this.label;
-            const taskSourceFileName = taskSourceMappings[this.label!.toLowerCase()];
+            const label = !this.label
+                ? ""
+                : (typeof this.label === "string" ? this.label : this.label.label);
+            this.tooltip = label;
+            const taskSourceFileName = taskSourceMappings[label.toLocaleLowerCase()];
             if (taskSourceFileName) {
                 this.iconPath = vscode.ThemeIcon.File;
                 this.resourceUri = vscode.Uri.file(`/${taskSourceFileName}`);

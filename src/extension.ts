@@ -56,6 +56,11 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.tasks.executeTask(event.execution.task);
         }
     });
+    vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
+        if (event.affectsConfiguration("taskManager.exclude")) {
+            taskTreeDataProvider.refresh();
+        }
+    });
     vscode.window.registerTreeDataProvider("task-manager-tasks", taskTreeDataProvider);
 }
 

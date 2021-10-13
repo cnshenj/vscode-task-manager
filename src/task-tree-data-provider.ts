@@ -36,7 +36,7 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
         const tasks = await vscode.tasks.fetchTasks();
         if (element) {
             if (element.taskSource) {
-                return TaskTreeDataProvider.getTasks(tasks, element.taskSource);
+                return TaskTreeDataProvider.getTaskItems(tasks, element.taskSource);
             } else {
                 return TaskTreeDataProvider.getTaskSources(tasks, element.taskScope);
             }
@@ -75,13 +75,25 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
         });
         return Object.keys(sources)
             .map(name => sources[name])
+            .filter(source => TaskTreeDataProvider.getTasks(tasks, source).length)
             .sort(TaskSource.compare)
             .map(source => new TaskTreeItem(source));
     }
 
-    private static getTasks(tasks: vscode.Task[], taskSource: TaskSource): TaskTreeItem[] {
-        return tasks
-            .filter(task => task.source === taskSource.name && (!taskSource.taskScope || taskSource.taskScope.equals(task.scope)))
+    private static isMatch(task: vscode.Task, taskSource: TaskSource, excludeRegExp?: RegExp): boolean {
+        return task.source === taskSource.name
+            && (!taskSource.taskScope || taskSource.taskScope.equals(task.scope))
+            && !excludeRegExp?.test(task.name);
+    }
+
+    private static getTasks(tasks: vscode.Task[], taskSource: TaskSource): vscode.Task[] {
+        const excludePattern = vscode.workspace.getConfiguration("taskManager").get("exclude") as string | null;
+        const excludeRegExp = excludePattern ? new RegExp(excludePattern) : undefined;
+        return tasks.filter(task => TaskTreeDataProvider.isMatch(task, taskSource, excludeRegExp));
+    }
+
+    private static getTaskItems(tasks: vscode.Task[], taskSource: TaskSource): TaskTreeItem[] {
+        return TaskTreeDataProvider.getTasks(tasks, taskSource)
             .sort(compareTasks)
             .map(task => new TaskTreeItem(task));
     }

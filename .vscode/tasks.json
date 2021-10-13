@@ -15,8 +15,8 @@
                     },
                     "background": {
                         "activeOnStart": true,
-                        "beginsPattern": "^Version: webpack",
-                        "endsPattern": "^Built at:"
+                        "beginsPattern": "^asset",
+                        "endsPattern": "^webpack \\d+\\.\\d+\\.\\d+ compiled successfully"
                     }
                 }
             ],
