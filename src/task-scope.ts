@@ -19,13 +19,11 @@ export class TaskScope {
         }
     }
 
-    public static getScopeName(data?: vscode.TaskScope | vscode.WorkspaceFolder): string {
+    public static getScopeName(data: vscode.TaskScope | vscode.WorkspaceFolder): string {
         if (typeof data === "number") {
             return vscode.TaskScope[data];
-        } else if (typeof (data) === "object" && "name" in data) {
-            return data.name;
         } else {
-            return "";
+            return data.name;
         }
     }
 

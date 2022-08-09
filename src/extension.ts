@@ -1,10 +1,10 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-
-import { restartingTaskIds } from "./storage";
 import { TaskTreeDataProvider } from "./task-tree-data-provider";
 import { TaskTreeItem } from './task-tree-item';
+
+const restartingTasks = new Set<vscode.Task>();
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -34,7 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
         (taskTreeItem: TaskTreeItem) => {
             if (taskTreeItem.execution) {
                 const task = taskTreeItem.execution.task!;
-                restartingTaskIds.add(`${task.source}/${task.name}`);
+                restartingTasks.add(task);
                 taskTreeItem.execution.terminate();
             }
         });
@@ -50,10 +50,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.tasks.onDidEndTask((event) => {
         taskTreeDataProvider.refresh();
         const task = event.execution.task;
-        const taskId = `${task.source}/${task.name}`;
-        if (restartingTaskIds.has(taskId)) {
-            restartingTaskIds.delete(taskId);
-            vscode.tasks.executeTask(event.execution.task);
+        if (restartingTasks.has(task)) {
+            restartingTasks.delete(task);
+            vscode.tasks.executeTask(task);
         }
     });
     vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
