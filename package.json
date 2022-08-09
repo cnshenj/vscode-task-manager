@@ -9,7 +9,7 @@
         "manage"
     ],
     "icon": "images/logo.png",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "repository": {
         "url": "https://github.com/cnshenj/vscode-task-manager"
     },

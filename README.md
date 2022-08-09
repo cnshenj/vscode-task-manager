@@ -19,6 +19,9 @@ Manages tasks in Visual Studio Code in a custom activity view.
 
 ## Release Notes
 
+### 0.7.0
+- Organize tasks by scope/folder/source.
+
 ### 0.6.0
 - Added configuration `taskManager.exclude`.
 

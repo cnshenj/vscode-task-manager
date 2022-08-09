@@ -37,3 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.6.0]
 ### Added
 - Configuration `taskManager.exclude`
+
+## [0.7.0]
+### Changed
+- Organize tasks by scope/folder/source
