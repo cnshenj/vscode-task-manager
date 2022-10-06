@@ -6,18 +6,18 @@ Manages tasks in Visual Studio Code in a custom activity view.
 
 - List all detected tasks grouped by sources, and by root folders
   * The task list is automatically refreshed when a common task file is changed (e.g. gulpfile.js)
-- Run/terminate tasks directly in the custom activity view
+- Run/terminate/restart tasks directly in the custom activity view
 - Running tasks are indicated by an animated icon
+- Total number of running tasks is shown as view badge
 - Exclude tasks using a regular expression pattern `taskManager.exclude`
 
 ### Screenshot
 ![Screenshot](images/screenshot.png)
 
-## Known Issues
-
-- No number of running tasks badge on the custom activity icon due to lack of VSCode API ([#62783](https://github.com/Microsoft/vscode/issues/62783))
-
 ## Release Notes
+
+### 1.0.0
+- View badge to indicate how many tasks are running
 
 ### 0.7.0
 - Organize tasks by scope/folder/source.

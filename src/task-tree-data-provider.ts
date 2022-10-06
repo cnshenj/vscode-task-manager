@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { getOrAdd } from './helpers';
 import { TaskScope } from './task-scope';
-import { taskFileRegExp, TaskSource } from './task-source';
+import { taskFileRegExp } from './task-source';
 import { TaskTreeItem } from "./task-tree-item";
 import { TaskTreeItemType } from './task-tree-item-type';
 
@@ -17,6 +17,11 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
         vscode.workspace.onDidChangeWorkspaceFolders(e => {
             this.refresh();
             this.setupWatchers(e.added, e.removed);
+        });
+        vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
+            if (event.affectsConfiguration("taskManager.exclude")) {
+                this.refresh();
+            }
         });
     }
 

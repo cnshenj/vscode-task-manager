@@ -5,14 +5,20 @@ import { TaskTreeDataProvider } from "./task-tree-data-provider";
 import { TaskTreeItem } from './task-tree-item';
 
 const restartingTasks = new Set<vscode.Task>();
+let treeView: vscode.TreeView<TaskTreeItem>;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
     const taskTreeDataProvider = new TaskTreeDataProvider();
+    const updateTreeView = () => {
+        taskTreeDataProvider.refresh();
+        updateViewBadge();
+    };
+
     const refreshTasksCommand = vscode.commands.registerCommand(
         "task-manager-tasks.refresh",
-        () => { taskTreeDataProvider.refresh(); });
+        updateTreeView);
     const configureTaskCommand = vscode.commands.registerCommand(
         "task-manager-tasks.configure",
         () => { vscode.commands.executeCommand("workbench.action.tasks.configureTaskRunner"); });
@@ -46,22 +52,31 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(terminateTaskCommand);
     context.subscriptions.push(restartTaskCommand);
 
-    vscode.tasks.onDidStartTask(() => taskTreeDataProvider.refresh());
+    vscode.tasks.onDidStartTask(updateTreeView);
     vscode.tasks.onDidEndTask((event) => {
-        taskTreeDataProvider.refresh();
+        updateTreeView();
         const task = event.execution.task;
         if (restartingTasks.has(task)) {
             restartingTasks.delete(task);
             vscode.tasks.executeTask(task);
         }
     });
-    vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
-        if (event.affectsConfiguration("taskManager.exclude")) {
-            taskTreeDataProvider.refresh();
+    treeView = vscode.window.createTreeView(
+        "task-manager-tasks",
+        {
+            treeDataProvider: taskTreeDataProvider,
+            showCollapseAll: true
         }
-    });
-    vscode.window.registerTreeDataProvider("task-manager-tasks", taskTreeDataProvider);
+    );
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() { }
+
+function updateViewBadge() {
+    const count = vscode.tasks.taskExecutions.length;
+    treeView.badge = {
+        value: count,
+        tooltip: `${count === 0 ? "No" : count.toString()} running ${count > 1 ? "tasks" : "task"}`
+    };
+}
