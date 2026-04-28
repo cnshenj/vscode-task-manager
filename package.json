@@ -84,6 +84,18 @@
         "title": "Restart Task",
         "category": "Task Manager",
         "icon": "$(debug-restart)"
+      },
+      {
+        "command": "task-manager-tasks.favorite",
+        "title": "Favorite Task",
+        "category": "Task Manager",
+        "icon": "$(star-empty)"
+      },
+      {
+        "command": "task-manager-tasks.unfavorite",
+        "title": "Unfavorite Task",
+        "category": "Task Manager",
+        "icon": "$(star-full)"
       }
     ],
     "viewsContainers": {
@@ -129,6 +141,14 @@
         {
           "command": "task-manager-tasks.restart",
           "when": "false"
+        },
+        {
+          "command": "task-manager-tasks.favorite",
+          "when": "false"
+        },
+        {
+          "command": "task-manager-tasks.unfavorite",
+          "when": "false"
         }
       ],
       "view/title": [
@@ -150,18 +170,28 @@
       "view/item/context": [
         {
           "command": "task-manager-tasks.run",
-          "when": "view == task-manager-tasks && viewItem == task",
+          "when": "view == task-manager-tasks && (viewItem == task || viewItem == favoriteTask)",
           "group": "inline@1"
         },
         {
           "command": "task-manager-tasks.terminate",
-          "when": "view == task-manager-tasks && viewItem == runningTask",
+          "when": "view == task-manager-tasks && (viewItem == runningTask || viewItem == runningFavoriteTask)",
           "group": "inline@2"
         },
         {
           "command": "task-manager-tasks.restart",
-          "when": "view == task-manager-tasks && viewItem == runningTask",
+          "when": "view == task-manager-tasks && (viewItem == runningTask || viewItem == runningFavoriteTask)",
           "group": "inline@3"
+        },
+        {
+          "command": "task-manager-tasks.favorite",
+          "when": "view == task-manager-tasks && (viewItem == task || viewItem == runningTask)",
+          "group": "inline@4"
+        },
+        {
+          "command": "task-manager-tasks.unfavorite",
+          "when": "view == task-manager-tasks && (viewItem == favoriteTask || viewItem == runningFavoriteTask)",
+          "group": "inline@4"
         }
       ]
     },
@@ -178,6 +208,14 @@
             "type": "boolean",
             "default": true,
             "description": "Collapse the task tree to top-level groups when there are more than three groups and more than 30 tasks."
+          },
+          "taskManager.favorites": {
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "description": "Favorite task identifiers saved in workspace settings."
           }
         }
       }

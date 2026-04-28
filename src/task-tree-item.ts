@@ -9,6 +9,10 @@ import { TaskTreeItemType } from "./task-tree-item-type";
 
 type TaskData = string | vscode.Task | TaskScope;
 
+interface TaskTreeItemOptions {
+  isFavorite?: boolean;
+}
+
 const basePath = path.join(__dirname, "..", "resources");
 
 export class TaskTreeItem extends vscode.TreeItem {
@@ -24,6 +28,7 @@ export class TaskTreeItem extends vscode.TreeItem {
     type: TaskTreeItemType,
     taskPath: string,
     parent?: TaskTreeItem,
+    options?: TaskTreeItemOptions,
   ) {
     super(
       TaskTreeItem.getItemLabel(data),
@@ -54,7 +59,10 @@ export class TaskTreeItem extends vscode.TreeItem {
       this.execution = vscode.tasks.taskExecutions.find(
         (e) => e.task.name === data.name && e.task.source === data.source,
       );
-      this.contextValue = this.execution ? "runningTask" : "task";
+      this.contextValue = TaskTreeItem.getTaskContextValue(
+        this.execution,
+        options?.isFavorite ?? false,
+      );
       this.tooltip = data.name;
 
       if (this.execution) {
@@ -68,6 +76,17 @@ export class TaskTreeItem extends vscode.TreeItem {
     if (parent) {
       parent.children.push(this);
     }
+  }
+
+  private static getTaskContextValue(
+    execution: vscode.TaskExecution | undefined,
+    isFavorite: boolean,
+  ): string {
+    if (execution) {
+      return isFavorite ? "runningFavoriteTask" : "runningTask";
+    }
+
+    return isFavorite ? "favoriteTask" : "task";
   }
 
   public static compare(x: TaskTreeItem, y: TaskTreeItem): number {

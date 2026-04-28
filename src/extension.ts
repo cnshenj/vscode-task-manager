@@ -59,6 +59,16 @@ export function activate(context: vscode.ExtensionContext) {
       }
     },
   );
+  const favoriteTaskCommand = vscode.commands.registerCommand(
+    "task-manager-tasks.favorite",
+    (taskTreeItem: TaskTreeItem) =>
+      taskTreeDataProvider.favoriteTask(taskTreeItem),
+  );
+  const unfavoriteTaskCommand = vscode.commands.registerCommand(
+    "task-manager-tasks.unfavorite",
+    (taskTreeItem: TaskTreeItem) =>
+      taskTreeDataProvider.unfavoriteTask(taskTreeItem),
+  );
 
   context.subscriptions.push(refreshTasksCommand);
   context.subscriptions.push(configureTaskCommand);
@@ -66,6 +76,8 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(runTaskCommand);
   context.subscriptions.push(terminateTaskCommand);
   context.subscriptions.push(restartTaskCommand);
+  context.subscriptions.push(favoriteTaskCommand);
+  context.subscriptions.push(unfavoriteTaskCommand);
 
   vscode.tasks.onDidStartTask(updateTreeView);
   vscode.tasks.onDidEndTask((event) => {

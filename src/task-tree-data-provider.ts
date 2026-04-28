@@ -1,16 +1,21 @@
 import * as vscode from "vscode";
 
+import {
+  collapseLargeTaskTreeConfigKey,
+  collapseLargeTaskTreeConfigPath,
+  excludeConfigKey,
+  excludeConfigPath,
+  favoritesConfigKey,
+  favoritesConfigPath,
+  taskManagerName,
+} from "./configuration";
 import { getOrAdd } from "./helpers";
 import { TaskScope } from "./task-scope";
 import { taskFileRegExp } from "./task-source";
 import { TaskTreeItem } from "./task-tree-item";
 import { TaskTreeItemType } from "./task-tree-item-type";
 
-const taskManagerName = "taskManager";
-const excludeConfigKey = "exclude";
-const collapseLargeTaskTreeConfigKey = "collapseLargeTaskTree";
-const excludeConfigPath = `${taskManagerName}.${excludeConfigKey}`;
-const collapseLargeTaskTreeConfigPath = `${taskManagerName}.${collapseLargeTaskTreeConfigKey}`;
+const favoritesLabel = "Favorites";
 
 export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeItem> {
   private _tree: TaskTreeItem[] | undefined;
@@ -31,7 +36,8 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
       (event: vscode.ConfigurationChangeEvent) => {
         if (
           event.affectsConfiguration(excludeConfigPath) ||
-          event.affectsConfiguration(collapseLargeTaskTreeConfigPath)
+          event.affectsConfiguration(collapseLargeTaskTreeConfigPath) ||
+          event.affectsConfiguration(favoritesConfigPath)
         ) {
           this.refresh();
         }
@@ -65,6 +71,22 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
     }
 
     return TaskTreeDataProvider.findTreeItem(task, this._tree);
+  }
+
+  public async favoriteTask(taskTreeItem: TaskTreeItem): Promise<void> {
+    await TaskTreeDataProvider.updateFavoriteTaskIds((favoriteTaskIds) => {
+      if (taskTreeItem.task) {
+        favoriteTaskIds.add(taskTreeItem.path);
+      }
+    });
+  }
+
+  public async unfavoriteTask(taskTreeItem: TaskTreeItem): Promise<void> {
+    await TaskTreeDataProvider.updateFavoriteTaskIds((favoriteTaskIds) => {
+      if (taskTreeItem.task) {
+        favoriteTaskIds.delete(taskTreeItem.path);
+      }
+    });
   }
 
   private static findTreeItem(
@@ -104,9 +126,11 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
     const excludeRegExp = new RegExp(excludePattern);
     return tasks.filter((task) => !excludeRegExp.test(task.name));
   }
+
   private static async generateTree(): Promise<TaskTreeItem[]> {
     const treeItemMap = new Map<string, TaskTreeItem>();
     const tasks = await TaskTreeDataProvider.getTasks();
+    const favoriteTaskIds = new Set(TaskTreeDataProvider.getFavoriteTaskIds());
     for (const task of tasks) {
       // Add scope item if not exist
       const scope = task.scope ?? vscode.TaskScope.Global;
@@ -138,8 +162,10 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
           new TaskTreeItem(task.source, TaskTreeItemType.source, path, parent),
       );
 
-      path = `${path}/${task.name}`;
-      new TaskTreeItem(task, TaskTreeItemType.task, path, parent);
+      const taskPath = `${path}/${task.name}`;
+      new TaskTreeItem(task, TaskTreeItemType.task, taskPath, parent, {
+        isFavorite: favoriteTaskIds.has(taskPath),
+      });
     }
 
     const treeItems = Array.from(treeItemMap.values()).filter(
@@ -150,7 +176,10 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
     // If only one scope, lift its children to top level to reduce nesting
     const rootItems =
       treeItems.length === 1 ? treeItems[0]!.children : treeItems;
-    if (TaskTreeDataProvider.shouldCollapseRootItems(rootItems, tasks.length)) {
+    const shouldCollapseRootItems =
+      TaskTreeDataProvider.shouldCollapseRootItems(rootItems, tasks.length);
+    TaskTreeDataProvider.addFavoritesGroup(rootItems, tasks, favoriteTaskIds);
+    if (shouldCollapseRootItems) {
       for (const item of rootItems) {
         if (item.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
           item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
@@ -159,6 +188,74 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
     }
 
     return rootItems;
+  }
+
+  private static addFavoritesGroup(
+    rootItems: TaskTreeItem[],
+    tasks: vscode.Task[],
+    favoriteTaskIds: Set<string>,
+  ): void {
+    if (favoriteTaskIds.size === 0) {
+      return;
+    }
+
+    const favoritesItem = new TaskTreeItem(
+      favoritesLabel,
+      TaskTreeItemType.favorites,
+      favoritesLabel,
+    );
+
+    for (const task of tasks) {
+      const taskPath = TaskTreeDataProvider.getTaskPath(task);
+      if (favoriteTaskIds.has(taskPath)) {
+        new TaskTreeItem(task, TaskTreeItemType.task, taskPath, favoritesItem, {
+          isFavorite: true,
+        });
+      }
+    }
+
+    if (favoritesItem.children.length > 0) {
+      favoritesItem.children.sort((x, y) => TaskTreeItem.compare(x, y));
+      rootItems.unshift(favoritesItem);
+    }
+  }
+
+  private static getFavoriteTaskIds(): string[] {
+    const favoriteTaskIds = vscode.workspace
+      .getConfiguration(taskManagerName)
+      .get(favoritesConfigKey, []);
+
+    return Array.isArray(favoriteTaskIds)
+      ? favoriteTaskIds.filter(
+          (favoriteTaskId) => typeof favoriteTaskId === "string",
+        )
+      : [];
+  }
+
+  private static getTaskPath(task: vscode.Task): string {
+    const scope = task.scope ?? vscode.TaskScope.Global;
+    const pathParts = [TaskScope.getScopeName(scope)];
+    const folderPath = task.definition["path"] as string | undefined;
+    if (folderPath) {
+      pathParts.push(folderPath);
+    }
+
+    pathParts.push(task.source, task.name);
+    return pathParts.join("/");
+  }
+
+  private static async updateFavoriteTaskIds(
+    update: (favoriteTaskIds: Set<string>) => void,
+  ): Promise<void> {
+    const favoriteTaskIds = new Set(TaskTreeDataProvider.getFavoriteTaskIds());
+    update(favoriteTaskIds);
+    await vscode.workspace
+      .getConfiguration(taskManagerName)
+      .update(
+        favoritesConfigKey,
+        Array.from(favoriteTaskIds).sort(),
+        vscode.ConfigurationTarget.Workspace,
+      );
   }
 
   private static shouldCollapseRootItems(

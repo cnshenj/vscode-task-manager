@@ -3,4 +3,5 @@ export enum TaskTreeItemType {
   source,
   folder,
   task,
+  favorites,
 }
