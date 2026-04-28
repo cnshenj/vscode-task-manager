@@ -5,7 +5,7 @@
   "tasks": [
     {
       "label": "watch",
-      "dependsOn": ["watch:tsc-ext", "watch:build"],
+      "dependsOn": ["watch:tsc", "watch:build"],
       "presentation": {
         "reveal": "never"
       },
@@ -48,61 +48,15 @@
     },
     {
       "type": "npm",
-      "script": "watch:tsc-ext",
+      "script": "watch:tsc",
       "group": "build",
-      "problemMatcher": {
-        "owner": "tsgo",
-        "fileLocation": ["relative", "${workspaceFolder}"],
-        "pattern": [
-          {
-            "regexp": "^(.+):(\\d+):(\\d+) - error(.+)$",
-            "file": 1,
-            "line": 2,
-            "column": 3,
-            "message": 4
-          }
-        ],
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "^build starting at",
-          "endsPattern": "^build finished in"
-        }
-      },
+      "problemMatcher": "$tsc-watch",
       "isBackground": true,
-      "label": "watch:tsc-ext",
+      "label": "watch:tsc",
       "presentation": {
         "group": "watch",
         "reveal": "silent"
       }
-    },
-    {
-      "type": "npm",
-      "script": "watch-tests",
-      "problemMatcher": "$tsc-watch",
-      "isBackground": true,
-      "label": "watch-tests",
-      "presentation": {
-        "reveal": "never",
-        "group": "watchers"
-      },
-      "group": "build"
-    },
-    {
-      "label": "tasks: watch-tests",
-      "dependsOn": ["npm: watch", "watch-tests"],
-      "problemMatcher": []
-    },
-    {
-      "type": "npm",
-      "script": "compile",
-      "label": "npm: compile",
-      "group": "build"
-    },
-    {
-      "type": "npm",
-      "script": "package",
-      "label": "npm: package",
-      "group": "build"
     }
   ]
 }

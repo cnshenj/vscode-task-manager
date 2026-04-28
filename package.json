@@ -21,7 +21,7 @@
     "compile": "pnpm run check-types && pnpm run lint && rolldown -c",
     "watch": "npm-run-all -p watch:*",
     "watch:build": "rolldown -c -w",
-    "watch:tsc-ext": "tsgo --noEmit --watch --project tsconfig.json",
+    "watch:tsc": "tsgo --noEmit --watch --project tsconfig.json",
     "package": "pnpm run check-types && pnpm run lint && cross-env NODE_ENV=production rolldown -c",
     "compile-tests": "tsgo -p . --outDir out",
     "watch-tests": "tsgo -p . -w --outDir out",
