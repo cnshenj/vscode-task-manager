@@ -11,19 +11,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.3.0
         with:
-          node-version: "24.x"
-      - run: npm ci
-      - run: npm install vsce ovsx
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5.0.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Publish to VSCode Marketplace
         if: ${{ !cancelled() }}
-        run: ./node_modules/.bin/vsce publish
+        run: pnpm dlx @vscode/vsce publish
         env:
           VSCE_PAT: ${{ secrets.ADO_PAT }}
+
       - name: Publish to Open VSX Registry
         if: ${{ !cancelled() }}
-        run: ./node_modules/.bin/ovsx publish
+        run: pnpm dlx ovsx publish
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
