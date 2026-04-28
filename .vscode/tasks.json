@@ -57,6 +57,18 @@
         "group": "watch",
         "reveal": "silent"
       }
+    },
+    {
+      "type": "npm",
+      "script": "watch-tests",
+      "group": "build",
+      "problemMatcher": "$tsc-watch",
+      "isBackground": true,
+      "label": "watch-tests",
+      "presentation": {
+        "group": "watch",
+        "reveal": "silent"
+      }
     }
   ]
 }

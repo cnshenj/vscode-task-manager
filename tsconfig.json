@@ -15,7 +15,7 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "resolveJsonModule": true,
-    "types": ["node", "vscode"],
+    "types": ["node", "vscode", "mocha"],
 
     // Emit
     "declaration": true,
