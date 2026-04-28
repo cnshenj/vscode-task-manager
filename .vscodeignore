@@ -4,9 +4,12 @@
 node_modules/
 out/
 src/
-.eslintrc.json
 .gitignore
+.oxfmtrc.json
+.oxlintrc.json
+pnpm-lock.yaml
+rolldown.config.mts
 tsconfig.json
-webpack.config.js
 **/*.map
 **/*.ts
+**/.vscode-test.*
