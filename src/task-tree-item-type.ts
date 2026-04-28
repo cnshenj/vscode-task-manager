@@ -1,6 +1,6 @@
 export enum TaskTreeItemType {
-    scope,
-    source,
-    folder,
-    task,
+  scope,
+  source,
+  folder,
+  task,
 }

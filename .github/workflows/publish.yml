@@ -8,23 +8,22 @@ on:
 
 jobs:
   publish_extension:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v1
-      with:
-        node-version: "14.x"
-    - run: npm ci
-    - run: npm install vsce ovsx
-    - name: Publish to VSCode Marketplace
-      if: ${{ !cancelled() }}
-      run: ./node_modules/.bin/vsce publish
-      env:
-        VSCE_PAT: ${{ secrets.ADO_PAT }}
-    - name: Publish to Open VSX Registry
-      if: ${{ !cancelled() }}
-      run: ./node_modules/.bin/ovsx publish
-      env:
-        OVSX_PAT: ${{ secrets.OVSX_PAT }}
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "24.x"
+      - run: npm ci
+      - run: npm install vsce ovsx
+      - name: Publish to VSCode Marketplace
+        if: ${{ !cancelled() }}
+        run: ./node_modules/.bin/vsce publish
+        env:
+          VSCE_PAT: ${{ secrets.ADO_PAT }}
+      - name: Publish to Open VSX Registry
+        if: ${{ !cancelled() }}
+        run: ./node_modules/.bin/ovsx publish
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
