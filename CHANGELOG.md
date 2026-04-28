@@ -67,3 +67,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - View badge to indicate how many tasks are running
+
+## [1.1.0]
+
+### Added
+
+- Favorite tasks and show them in a top-level Favorites group.
+- Collapse large task trees to top-level groups by default when there are more than three groups and more than 30 tasks.

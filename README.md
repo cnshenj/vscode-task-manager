@@ -19,6 +19,11 @@ Manages tasks in Visual Studio Code in a custom activity view.
 
 ## Release Notes
 
+### 1.1.0
+
+- Favorite tasks and show them in a top-level Favorites group.
+- Collapse large task trees to top-level groups by default when there are more than three groups and more than 30 tasks.
+
 ### 1.0.0
 
 - View badge to indicate how many tasks are running
