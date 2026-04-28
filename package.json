@@ -173,6 +173,11 @@
             "type": "string",
             "default": null,
             "description": "Regular expression pattern for excluding tasks."
+          },
+          "taskManager.collapseLargeTaskTree": {
+            "type": "boolean",
+            "default": true,
+            "description": "Collapse the task tree to top-level groups when there are more than three groups and more than 30 tasks."
           }
         }
       }

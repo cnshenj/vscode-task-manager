@@ -6,6 +6,12 @@ import { taskFileRegExp } from "./task-source";
 import { TaskTreeItem } from "./task-tree-item";
 import { TaskTreeItemType } from "./task-tree-item-type";
 
+const taskManagerName = "taskManager";
+const excludeConfigKey = "exclude";
+const collapseLargeTaskTreeConfigKey = "collapseLargeTaskTree";
+const excludeConfigPath = `${taskManagerName}.${excludeConfigKey}`;
+const collapseLargeTaskTreeConfigPath = `${taskManagerName}.${collapseLargeTaskTreeConfigKey}`;
+
 export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeItem> {
   private _tree: TaskTreeItem[] | undefined;
   private _watchers: { [key: string]: vscode.FileSystemWatcher[] } = {};
@@ -23,7 +29,10 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
     });
     vscode.workspace.onDidChangeConfiguration(
       (event: vscode.ConfigurationChangeEvent) => {
-        if (event.affectsConfiguration("taskManager.exclude")) {
+        if (
+          event.affectsConfiguration(excludeConfigPath) ||
+          event.affectsConfiguration(collapseLargeTaskTreeConfigPath)
+        ) {
           this.refresh();
         }
       },
@@ -86,8 +95,8 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
   private static async getTasks(): Promise<vscode.Task[]> {
     const tasks = await vscode.tasks.fetchTasks();
     const excludePattern = vscode.workspace
-      .getConfiguration("taskManager")
-      .get("exclude") as string | null;
+      .getConfiguration(taskManagerName)
+      .get(excludeConfigKey) as string | null;
     if (!excludePattern) {
       return tasks;
     }
@@ -139,7 +148,28 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
     TaskTreeDataProvider.sortTree(treeItems);
 
     // If only one scope, lift its children to top level to reduce nesting
-    return treeItems.length === 1 ? treeItems[0]!.children : treeItems;
+    const rootItems =
+      treeItems.length === 1 ? treeItems[0]!.children : treeItems;
+    if (TaskTreeDataProvider.shouldCollapseRootItems(rootItems, tasks.length)) {
+      for (const item of rootItems) {
+        if (item.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
+          item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+        }
+      }
+    }
+
+    return rootItems;
+  }
+
+  private static shouldCollapseRootItems(
+    rootItems: TaskTreeItem[],
+    taskCount: number,
+  ): boolean {
+    const collapseLargeTaskTree = vscode.workspace
+      .getConfiguration(taskManagerName)
+      .get(collapseLargeTaskTreeConfigKey) as boolean;
+
+    return collapseLargeTaskTree && rootItems.length > 3 && taskCount > 30;
   }
 
   private static sortTree(tree: TaskTreeItem[]): void {
