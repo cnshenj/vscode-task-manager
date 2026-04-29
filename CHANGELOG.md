@@ -81,3 +81,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Favorite tasks now show a source description when needed to distinguish tasks with the same name.
 - Favorite tasks are sorted by name and source for a more predictable order.
+
+## [1.2.0]
+
+### Added
+
+- Configuration `taskManager.taskSortOrder` for sorting tasks by label, group, or provider order.
+
+### Changed
+
+- Watch all `tasks.json` files in the workspace for task list refreshes.
+- Improve task state updates to keep running task indicators more reliable.

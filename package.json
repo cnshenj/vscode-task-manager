@@ -1,7 +1,7 @@
 {
   "name": "vscode-task-manager",
   "displayName": "Task Manager",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Manages tasks in Visual Studio Code.",
   "categories": [
     "Other"
