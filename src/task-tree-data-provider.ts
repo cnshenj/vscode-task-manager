@@ -484,7 +484,7 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
     if (added) {
       for (const workspaceFolder of added) {
         const tasksJsonWatcher = vscode.workspace.createFileSystemWatcher(
-          new vscode.RelativePattern(workspaceFolder, ".vscode/tasks.json"),
+          new vscode.RelativePattern(workspaceFolder, "**/.vscode/tasks.json"),
         );
         tasksJsonWatcher.onDidChange(this.refresh);
         tasksJsonWatcher.onDidCreate(this.refresh);
