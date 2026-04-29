@@ -11,6 +11,8 @@ type TaskData = string | vscode.Task | TaskScope;
 
 interface TaskTreeItemOptions {
   isFavorite?: boolean;
+  description?: string;
+  tooltip?: string;
 }
 
 const basePath = path.join(__dirname, "..", "resources");
@@ -63,7 +65,8 @@ export class TaskTreeItem extends vscode.TreeItem {
         this.execution,
         options?.isFavorite ?? false,
       );
-      this.tooltip = data.name;
+      this.description = options?.description;
+      this.tooltip = options?.tooltip ?? data.name;
 
       if (this.execution) {
         this.iconPath = {
@@ -99,6 +102,10 @@ export class TaskTreeItem extends vscode.TreeItem {
     }
 
     return compareStrings(x.label as string, y.label as string);
+  }
+
+  public static getTaskLabel(task: vscode.Task): string {
+    return TaskTreeItem.getItemLabel(task);
   }
 
   private static getItemLabel(data: TaskData): string {

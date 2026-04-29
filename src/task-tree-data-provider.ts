@@ -9,7 +9,7 @@ import {
   favoritesConfigPath,
   taskManagerName,
 } from "./configuration";
-import { getOrAdd } from "./helpers";
+import { compareStrings, getOrAdd } from "./helpers";
 import { TaskScope } from "./task-scope";
 import { taskFileRegExp } from "./task-source";
 import { TaskTreeItem } from "./task-tree-item";
@@ -181,7 +181,10 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
     TaskTreeDataProvider.addFavoritesGroup(rootItems, tasks, favoriteTaskIds);
     if (shouldCollapseRootItems) {
       for (const item of rootItems) {
-        if (item.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
+        if (
+          item.type !== TaskTreeItemType.favorites &&
+          item.collapsibleState !== vscode.TreeItemCollapsibleState.None
+        ) {
           item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
         }
       }
@@ -204,20 +207,68 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
       TaskTreeItemType.favorites,
       favoritesLabel,
     );
+    const omitRootScope = TaskTreeDataProvider.hasSingleTaskScope(tasks);
+    const taskOriginsByLabel = TaskTreeDataProvider.getTaskOriginsByLabel(
+      tasks,
+      omitRootScope,
+    );
 
     for (const task of tasks) {
       const taskPath = TaskTreeDataProvider.getTaskPath(task);
       if (favoriteTaskIds.has(taskPath)) {
         new TaskTreeItem(task, TaskTreeItemType.task, taskPath, favoritesItem, {
+          description: TaskTreeDataProvider.getShortestTaskOrigin(
+            task,
+            taskOriginsByLabel,
+            omitRootScope,
+          ),
           isFavorite: true,
+          tooltip: TaskTreeDataProvider.getTaskDisplayPath(task, omitRootScope),
         });
       }
     }
 
     if (favoritesItem.children.length > 0) {
-      favoritesItem.children.sort((x, y) => TaskTreeItem.compare(x, y));
+      favoritesItem.children.sort((x, y) =>
+        TaskTreeDataProvider.compareFavoriteTasks(x, y),
+      );
       rootItems.unshift(favoritesItem);
     }
+  }
+
+  private static compareFavoriteTasks(
+    x: TaskTreeItem,
+    y: TaskTreeItem,
+  ): number {
+    return (
+      compareStrings(
+        TaskTreeDataProvider.getTreeItemLabel(x),
+        TaskTreeDataProvider.getTreeItemLabel(y),
+      ) ||
+      compareStrings(
+        TaskTreeDataProvider.getTreeItemDescription(x),
+        TaskTreeDataProvider.getTreeItemDescription(y),
+      ) ||
+      compareStrings(
+        TaskTreeDataProvider.getTreeItemTooltip(x),
+        TaskTreeDataProvider.getTreeItemTooltip(y),
+      ) ||
+      compareStrings(x.path, y.path)
+    );
+  }
+
+  private static getTreeItemLabel(item: vscode.TreeItem): string {
+    return typeof item.label === "string"
+      ? item.label
+      : (item.label?.label ?? "");
+  }
+
+  private static getTreeItemDescription(item: vscode.TreeItem): string {
+    return typeof item.description === "string" ? item.description : "";
+  }
+
+  private static getTreeItemTooltip(item: vscode.TreeItem): string {
+    return typeof item.tooltip === "string" ? item.tooltip : "";
   }
 
   private static getFavoriteTaskIds(): string[] {
@@ -233,6 +284,91 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
   }
 
   private static getTaskPath(task: vscode.Task): string {
+    return TaskTreeDataProvider.getTaskPathParts(task).join("/");
+  }
+
+  private static getTaskOriginsByLabel(
+    tasks: vscode.Task[],
+    omitRootScope: boolean,
+  ): Map<string, string[][]> {
+    const taskOriginsByLabel = new Map<string, string[][]>();
+    for (const task of tasks) {
+      const label = TaskTreeItem.getTaskLabel(task);
+      const origins = getOrAdd(taskOriginsByLabel, label, () => []);
+      origins.push(
+        TaskTreeDataProvider.getTaskOriginParts(task, omitRootScope),
+      );
+    }
+
+    return taskOriginsByLabel;
+  }
+
+  private static getShortestTaskOrigin(
+    task: vscode.Task,
+    taskOriginsByLabel: Map<string, string[][]>,
+    omitRootScope: boolean,
+  ): string {
+    const taskOriginParts = TaskTreeDataProvider.getTaskOriginParts(
+      task,
+      omitRootScope,
+    );
+    const sameLabelOrigins =
+      taskOriginsByLabel.get(TaskTreeItem.getTaskLabel(task)) ?? [];
+
+    for (let length = 1; length < taskOriginParts.length; length++) {
+      const taskOriginPrefix = TaskTreeDataProvider.getTaskOriginPrefix(
+        taskOriginParts,
+        length,
+      );
+      const matchingOriginCount = sameLabelOrigins.filter(
+        (originParts) =>
+          TaskTreeDataProvider.getTaskOriginPrefix(originParts, length) ===
+          taskOriginPrefix,
+      ).length;
+
+      if (matchingOriginCount === 1) {
+        return TaskTreeDataProvider.getTaskOriginPrefix(
+          taskOriginParts,
+          length,
+        );
+      }
+    }
+
+    return TaskTreeDataProvider.getTaskOriginPrefix(
+      taskOriginParts,
+      taskOriginParts.length,
+    );
+  }
+
+  private static getTaskDisplayPath(
+    task: vscode.Task,
+    omitRootScope: boolean,
+  ): string {
+    return [
+      ...TaskTreeDataProvider.getTaskOriginParts(task, omitRootScope),
+      TaskTreeItem.getTaskLabel(task),
+    ].join("/");
+  }
+
+  private static getTaskOriginParts(
+    task: vscode.Task,
+    omitRootScope: boolean,
+  ): string[] {
+    const originParts = TaskTreeDataProvider.getTaskPathParts(task).slice(
+      0,
+      -1,
+    );
+    return omitRootScope ? originParts.slice(1) : originParts;
+  }
+
+  private static getTaskOriginPrefix(
+    taskOriginParts: string[],
+    length: number,
+  ): string {
+    return taskOriginParts.slice(0, length).join(" / ");
+  }
+
+  private static getTaskPathParts(task: vscode.Task): string[] {
     const scope = task.scope ?? vscode.TaskScope.Global;
     const pathParts = [TaskScope.getScopeName(scope)];
     const folderPath = task.definition["path"] as string | undefined;
@@ -241,7 +377,17 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
     }
 
     pathParts.push(task.source, task.name);
-    return pathParts.join("/");
+    return pathParts;
+  }
+
+  private static hasSingleTaskScope(tasks: vscode.Task[]): boolean {
+    const scopeNames = new Set(
+      tasks.map((task) =>
+        TaskScope.getScopeName(task.scope ?? vscode.TaskScope.Global),
+      ),
+    );
+
+    return scopeNames.size === 1;
   }
 
   private static async updateFavoriteTaskIds(
