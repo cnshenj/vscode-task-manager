@@ -185,19 +185,19 @@
           "group": "inline@1"
         },
         {
-          "command": "task-manager-tasks.viewSource",
-          "when": "view == task-manager-tasks && (viewItem == task || viewItem == favoriteTask || viewItem == runningTask || viewItem == runningFavoriteTask)",
-          "group": "inline@2"
-        },
-        {
           "command": "task-manager-tasks.terminate",
           "when": "view == task-manager-tasks && (viewItem == runningTask || viewItem == runningFavoriteTask)",
-          "group": "inline@3"
+          "group": "inline@1"
         },
         {
           "command": "task-manager-tasks.restart",
           "when": "view == task-manager-tasks && (viewItem == runningTask || viewItem == runningFavoriteTask)",
-          "group": "inline@4"
+          "group": "inline@2"
+        },
+        {
+          "command": "task-manager-tasks.viewSource",
+          "when": "view == task-manager-tasks && (viewItem == task || viewItem == favoriteTask || viewItem == runningTask || viewItem == runningFavoriteTask)",
+          "group": "inline@3"
         },
         {
           "command": "task-manager-tasks.favorite",
