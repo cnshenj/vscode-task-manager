@@ -1,4 +1,5 @@
 import * as path from "path";
+import { TextDecoder } from "util";
 
 import {
   findNodeAtLocation,
@@ -10,6 +11,7 @@ import * as vscode from "vscode";
 
 import { compareStrings } from "./helpers";
 import { TaskScope } from "./task-scope";
+import { TwoLevelCache } from "./two-level-cache";
 
 export const taskSourceMappings: { [key: string]: string } = {
   ant: "build.xml",
@@ -49,6 +51,36 @@ export interface TaskSourceDocument {
   position: vscode.Position;
 }
 
+export interface WorkspaceTaskSourceFile {
+  uri: vscode.Uri;
+  text: string;
+}
+
+const workspaceTaskSourceFilesByWorkspace = new TwoLevelCache<
+  string,
+  string,
+  WorkspaceTaskSourceFile
+>();
+
+export function invalidateWorkspaceTaskSourceFileCache(uri: vscode.Uri): void {
+  const uriKey = uri.toString(true);
+  if (workspaceTaskSourceFilesByWorkspace.deleteLayer(uriKey)) {
+    return;
+  }
+
+  const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+  if (!workspaceFolder) {
+    return;
+  }
+
+  const workspaceKey = workspaceFolder.uri.toString(true);
+  workspaceTaskSourceFilesByWorkspace.updateValue(
+    workspaceKey,
+    uriKey,
+    async () => await readWorkspaceTaskSourceFile(uri),
+  );
+}
+
 export class TaskSource {
   public static readonly defaultName = "Workspace";
 
@@ -74,7 +106,7 @@ export class TaskSource {
 export async function openTaskSourceDocument(
   task: vscode.Task,
 ): Promise<TaskSourceDocument | undefined> {
-  const uri = getTaskSourceUri(task);
+  const uri = await getTaskSourceUri(task);
   if (!uri) {
     return undefined;
   }
@@ -86,12 +118,14 @@ export async function openTaskSourceDocument(
   };
 }
 
-export function getTaskSourceUri(task: vscode.Task): vscode.Uri | undefined {
+export async function getTaskSourceUri(
+  task: vscode.Task,
+): Promise<vscode.Uri | undefined> {
   const taskType = getTaskDefinitionString(task, "type")?.toLocaleLowerCase();
   const taskSource = task.source.toLocaleLowerCase();
 
   if (taskSource === "workspace") {
-    return getWorkspaceTaskSourceUri(task);
+    return await getWorkspaceTaskSourceUri(task);
   }
 
   const workspaceFolder = getTaskWorkspaceFolder(task);
@@ -123,7 +157,9 @@ export function getTaskSourceUri(task: vscode.Task): vscode.Uri | undefined {
   return undefined;
 }
 
-function getWorkspaceTaskSourceUri(task: vscode.Task): vscode.Uri | undefined {
+async function getWorkspaceTaskSourceUri(
+  task: vscode.Task,
+): Promise<vscode.Uri | undefined> {
   if (
     task.scope === vscode.TaskScope.Workspace &&
     vscode.workspace.workspaceFile
@@ -136,10 +172,117 @@ function getWorkspaceTaskSourceUri(task: vscode.Task): vscode.Uri | undefined {
     return undefined;
   }
 
-  return vscode.Uri.joinPath(workspaceFolder.uri, ".vscode", "tasks.json");
+  return (
+    (await findWorkspaceTaskSourceUriInWorkspace(task, workspaceFolder)) ??
+    vscode.Uri.joinPath(workspaceFolder.uri, ".vscode", "tasks.json")
+  );
 }
 
-function getTaskSourcePosition(
+async function findWorkspaceTaskSourceUriInWorkspace(
+  task: vscode.Task,
+  workspaceFolder: vscode.WorkspaceFolder,
+): Promise<vscode.Uri | undefined> {
+  return findWorkspaceTaskSourceUri(
+    task,
+    await getWorkspaceTaskSourceFiles(workspaceFolder),
+    workspaceFolder.uri,
+  );
+}
+
+function getWorkspaceTaskSourceFiles(
+  workspaceFolder: vscode.WorkspaceFolder,
+): Promise<WorkspaceTaskSourceFile[]> {
+  const key = workspaceFolder.uri.toString(true);
+  return workspaceTaskSourceFilesByWorkspace.getValues(
+    key,
+    async () => await readWorkspaceTaskSourceFiles(workspaceFolder),
+  );
+}
+
+async function readWorkspaceTaskSourceFiles(
+  workspaceFolder: vscode.WorkspaceFolder,
+): Promise<Map<string, WorkspaceTaskSourceFile>> {
+  const uris = await vscode.workspace.findFiles(
+    new vscode.RelativePattern(workspaceFolder, "**/.vscode/tasks.json"),
+  );
+  const files = await Promise.all(
+    uris.map(async (uri) => await readWorkspaceTaskSourceFile(uri)),
+  );
+
+  return new Map(
+    files
+      .filter((file) => file !== undefined)
+      .map((file) => [file.uri.toString(true), file]),
+  );
+}
+
+async function readWorkspaceTaskSourceFile(
+  uri: vscode.Uri,
+): Promise<WorkspaceTaskSourceFile | undefined> {
+  try {
+    const content = await vscode.workspace.fs.readFile(uri);
+    return { uri, text: new TextDecoder().decode(content) };
+  } catch {
+    return undefined;
+  }
+}
+
+export function findWorkspaceTaskSourceUri(
+  task: vscode.Task,
+  files: readonly WorkspaceTaskSourceFile[],
+  workspaceFolderUri?: vscode.Uri,
+): vscode.Uri | undefined {
+  const exactMatches = findWorkspaceTaskSourceUriMatches(task, files, true);
+  if (exactMatches.length > 0) {
+    return chooseWorkspaceTaskSourceUri(exactMatches, task, workspaceFolderUri);
+  }
+
+  return chooseWorkspaceTaskSourceUri(
+    findWorkspaceTaskSourceUriMatches(task, files, false),
+    task,
+    workspaceFolderUri,
+  );
+}
+
+function findWorkspaceTaskSourceUriMatches(
+  task: vscode.Task,
+  files: readonly WorkspaceTaskSourceFile[],
+  exactTaskNameOnly: boolean,
+): vscode.Uri[] {
+  const matches: vscode.Uri[] = [];
+  for (const file of files) {
+    const root = parseTree(file.text);
+    if (root && findWorkspaceTaskNode(task, root, exactTaskNameOnly)) {
+      matches.push(file.uri);
+    }
+  }
+
+  return matches;
+}
+
+function chooseWorkspaceTaskSourceUri(
+  uris: readonly vscode.Uri[],
+  task: vscode.Task,
+  workspaceFolderUri: vscode.Uri | undefined,
+): vscode.Uri | undefined {
+  if (uris.length <= 1) {
+    return uris[0];
+  }
+
+  const taskPath = getTaskPath(task);
+  if (!taskPath || !workspaceFolderUri) {
+    return uris[0];
+  }
+
+  const pathUri = joinTaskSourcePath(
+    workspaceFolderUri,
+    taskPath,
+    ".vscode/tasks.json",
+  );
+  return uris.find((uri) => uri.toString() === pathUri.toString()) ?? uris[0];
+}
+
+export function getTaskSourcePosition(
   task: vscode.Task,
   document: vscode.TextDocument,
 ): vscode.Position {
@@ -152,10 +295,10 @@ function getTaskSourcePosition(
     const taskType = getTaskDefinitionString(task, "type")?.toLocaleLowerCase();
     const taskSource = task.source.toLocaleLowerCase();
     const node =
-      taskType === "npm" || taskSource === "npm"
-        ? findNpmTaskNode(task, root)
-        : taskSource === "workspace"
-          ? findWorkspaceTaskNode(task, root)
+      taskSource === "workspace"
+        ? findWorkspaceTaskNode(task, root)
+        : taskType === "npm" || taskSource === "npm"
+          ? findNpmTaskNode(task, root)
           : undefined;
 
     return node
@@ -177,24 +320,53 @@ function findNpmTaskNode(
 function findWorkspaceTaskNode(
   task: vscode.Task,
   root: JsonNode,
+  exactTaskNameOnly = false,
 ): JsonNode | undefined {
   const tasksNode = findTasksNode(root);
   if (!tasksNode?.children) {
     return undefined;
   }
 
+  const taskNames = getWorkspaceTaskNames(task, exactTaskNameOnly);
   for (const taskNode of tasksNode.children) {
     const labelNode = findNodeAtLocation(taskNode, ["label"]);
     const taskNameNode = findNodeAtLocation(taskNode, ["taskName"]);
     if (
-      getOptionalNodeValue(labelNode) === task.name ||
-      getOptionalNodeValue(taskNameNode) === task.name
+      taskNames.has(getOptionalNodeValue(labelNode)) ||
+      taskNames.has(getOptionalNodeValue(taskNameNode))
     ) {
       return labelNode ? getPropertyNode(labelNode) : taskNode;
     }
   }
 
   return undefined;
+}
+
+function getWorkspaceTaskNames(
+  task: vscode.Task,
+  exactTaskNameOnly: boolean,
+): Set<unknown> {
+  const taskNames = new Set<unknown>([task.name]);
+  addTaskDefinitionName(taskNames, task, "label", exactTaskNameOnly);
+  addTaskDefinitionName(taskNames, task, "taskName", exactTaskNameOnly);
+
+  return taskNames;
+}
+
+function addTaskDefinitionName(
+  taskNames: Set<unknown>,
+  task: vscode.Task,
+  key: string,
+  exactTaskNameOnly: boolean,
+): void {
+  if (exactTaskNameOnly) {
+    return;
+  }
+
+  const name = getTaskDefinitionString(task, key);
+  if (name) {
+    taskNames.add(name);
+  }
 }
 
 function findTasksNode(root: JsonNode): JsonNode | undefined {

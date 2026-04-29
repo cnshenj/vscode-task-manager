@@ -13,7 +13,10 @@ import {
 } from "./configuration";
 import { compareStrings, getOrAdd } from "./helpers";
 import { TaskScope } from "./task-scope";
-import { taskFileRegExp } from "./task-source";
+import {
+  invalidateWorkspaceTaskSourceFileCache,
+  taskFileRegExp,
+} from "./task-source";
 import { TaskTreeItem } from "./task-tree-item";
 import { TaskTreeItemType } from "./task-tree-item-type";
 
@@ -63,6 +66,10 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
 
   public refresh = async (fileUri?: vscode.Uri): Promise<void> => {
     if (!fileUri || taskFileRegExp.test(fileUri.path)) {
+      if (fileUri) {
+        invalidateWorkspaceTaskSourceFileCache(fileUri);
+      }
+
       const refreshVersion = ++this._refreshVersion;
       const tree = await TaskTreeDataProvider.generateTree();
       if (refreshVersion !== this._refreshVersion) {
@@ -581,6 +588,7 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
 
     if (removed) {
       for (const workspaceFolder of removed) {
+        invalidateWorkspaceTaskSourceFileCache(workspaceFolder.uri);
         const key = workspaceFolder.uri.toString(true);
         const watchers = this._watchers[key];
         if (watchers) {
