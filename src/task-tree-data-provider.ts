@@ -16,9 +16,12 @@ import { TaskTreeItem } from "./task-tree-item";
 import { TaskTreeItemType } from "./task-tree-item-type";
 
 const favoritesLabel = "Favorites";
+const taskDiscoveryRefreshDelays = [1000, 3000, 5000];
 
 export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeItem> {
   private _tree: TaskTreeItem[] | undefined;
+  private _treeSignature: string | undefined;
+  private _refreshVersion = 0;
   private _watchers: { [key: string]: vscode.FileSystemWatcher[] } = {};
   private _onDidChangeTreeData = new vscode.EventEmitter<
     TaskTreeItem | undefined
@@ -28,8 +31,10 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
 
   constructor() {
     this.setupWatchers();
+    this.refreshAfterTaskDiscovery();
     vscode.workspace.onDidChangeWorkspaceFolders((e) => {
-      this.refresh();
+      void this.refresh();
+      this.refreshAfterTaskDiscovery();
       this.setupWatchers(e.added, e.removed);
     });
     vscode.workspace.onDidChangeConfiguration(
@@ -39,15 +44,27 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
           event.affectsConfiguration(collapseLargeTaskTreeConfigPath) ||
           event.affectsConfiguration(favoritesConfigPath)
         ) {
-          this.refresh();
+          void this.refresh();
         }
       },
     );
   }
 
-  public refresh = (fileUri?: vscode.Uri): void => {
+  public refresh = async (fileUri?: vscode.Uri): Promise<void> => {
     if (!fileUri || taskFileRegExp.test(fileUri.path)) {
-      this._tree = undefined;
+      const refreshVersion = ++this._refreshVersion;
+      const tree = await TaskTreeDataProvider.generateTree();
+      if (refreshVersion !== this._refreshVersion) {
+        return;
+      }
+
+      const treeSignature = TaskTreeDataProvider.getTreeSignature(tree);
+      if (treeSignature === this._treeSignature) {
+        return;
+      }
+
+      this._tree = tree;
+      this._treeSignature = treeSignature;
       this._onDidChangeTreeData.fire(undefined);
     }
   };
@@ -424,12 +441,36 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
     }
   }
 
+  private static getTreeSignature(items: TaskTreeItem[]): string {
+    return JSON.stringify(items.map((item) => this.getItemSignature(item)));
+  }
+
+  private static getItemSignature(item: TaskTreeItem): object {
+    return {
+      type: item.type,
+      path: item.path,
+      label: TaskTreeDataProvider.getTreeItemLabel(item),
+      description: TaskTreeDataProvider.getTreeItemDescription(item),
+      tooltip: TaskTreeDataProvider.getTreeItemTooltip(item),
+      contextValue: item.contextValue,
+      collapsibleState: item.collapsibleState,
+      children: item.children.map((child) => this.getItemSignature(child)),
+    };
+  }
+
   private async getTree(): Promise<TaskTreeItem[]> {
     if (!this._tree) {
       this._tree = await TaskTreeDataProvider.generateTree();
+      this._treeSignature = TaskTreeDataProvider.getTreeSignature(this._tree);
     }
 
     return this._tree;
+  }
+
+  private refreshAfterTaskDiscovery(): void {
+    for (const delay of taskDiscoveryRefreshDelays) {
+      setTimeout(this.refresh, delay);
+    }
   }
 
   private setupWatchers(

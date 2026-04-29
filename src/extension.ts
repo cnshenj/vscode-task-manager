@@ -13,7 +13,7 @@ let treeView: vscode.TreeView<TaskTreeItem>;
 export function activate(context: vscode.ExtensionContext) {
   const taskTreeDataProvider = new TaskTreeDataProvider();
   const updateTreeView = () => {
-    taskTreeDataProvider.refresh();
+    void taskTreeDataProvider.refresh();
     updateViewBadge();
   };
 
