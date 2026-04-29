@@ -226,7 +226,7 @@
   ],
   "icon": "images/logo.png",
   "engines": {
-    "vscode": "^1.72.0"
+    "vscode": "^1.103.0"
   },
   "packageManager": "pnpm@10.33.0"
 }
