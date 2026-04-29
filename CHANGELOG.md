@@ -74,3 +74,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Favorite tasks and show them in a top-level Favorites group.
 - Collapse large task trees to top-level groups by default when there are more than three groups and more than 30 tasks.
+
+## [1.1.1]
+
+### Changed
+
+- Favorite tasks now show a source description when needed to distinguish tasks with the same name.
+- Favorite tasks are sorted by name and source for a more predictable order.
