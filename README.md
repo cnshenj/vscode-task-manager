@@ -10,8 +10,53 @@ Manages tasks in Visual Studio Code in a custom activity view.
 - Keep frequently used tasks in a top-level Favorites group
 - Running tasks are indicated by an animated icon
 - Total number of running tasks is shown as view badge
-- Exclude tasks using a regular expression pattern `taskManager.exclude`
-- Automatically collapse large task trees using `taskManager.collapseLargeTaskTree`
+- Exclude tasks using a regular expression pattern
+- Automatically collapse large task trees
+- Configure task sorting
+
+## Configuration
+
+### `taskManager.exclude`
+
+Regular expression pattern for excluding tasks by name.
+
+Example:
+
+```json
+{
+  "taskManager.exclude": "^npm:"
+}
+```
+
+### `taskManager.collapseLargeTaskTree`
+
+Controls whether the task tree automatically collapses top-level groups when there are more than three groups and more than 30 tasks. Enabled by default.
+
+Example:
+
+```json
+{
+  "taskManager.collapseLargeTaskTree": false
+}
+```
+
+### `taskManager.taskSortOrder`
+
+Controls how task items are sorted in the task tree. Favorites always keep their default label and origin sort order.
+
+Available values:
+
+- `label` - Sort tasks alphabetically by label. This is the default.
+- `group` - Sort tasks by task group, then alphabetically by label. Built-in groups are ordered as build, test, clean, and rebuild; custom groups are sorted by group id after those.
+- `provider` - Keep tasks in the order returned by VS Code task providers. This is useful when a provider returns tasks in a meaningful order, but the exact order depends on VS Code and the provider.
+
+Example:
+
+```json
+{
+  "taskManager.taskSortOrder": "provider"
+}
+```
 
 ### Screenshot
 

@@ -209,6 +209,21 @@
             "default": true,
             "description": "Collapse the task tree to top-level groups when there are more than three groups and more than 30 tasks."
           },
+          "taskManager.taskSortOrder": {
+            "type": "string",
+            "default": "label",
+            "enum": [
+              "label",
+              "group",
+              "provider"
+            ],
+            "enumDescriptions": [
+              "Sort tasks alphabetically by label.",
+              "Sort tasks by task group, then alphabetically by label.",
+              "Keep tasks in the order returned by VS Code task providers."
+            ],
+            "description": "Controls how task items are sorted."
+          },
           "taskManager.favorites": {
             "type": "array",
             "default": [],

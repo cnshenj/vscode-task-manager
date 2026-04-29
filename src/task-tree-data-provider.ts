@@ -8,6 +8,8 @@ import {
   favoritesConfigKey,
   favoritesConfigPath,
   taskManagerName,
+  taskSortOrderConfigKey,
+  taskSortOrderConfigPath,
 } from "./configuration";
 import { compareStrings, getOrAdd } from "./helpers";
 import { TaskScope } from "./task-scope";
@@ -17,6 +19,14 @@ import { TaskTreeItemType } from "./task-tree-item-type";
 
 const favoritesLabel = "Favorites";
 const taskDiscoveryRefreshDelays = [1000, 3000, 5000];
+const taskGroupOrder = new Map<string, number>([
+  ["build", 0],
+  ["test", 1],
+  ["clean", 2],
+  ["rebuild", 3],
+]);
+
+type TaskSortOrder = "label" | "group" | "provider";
 
 export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeItem> {
   private _tree: TaskTreeItem[] | undefined;
@@ -42,6 +52,7 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
         if (
           event.affectsConfiguration(excludeConfigPath) ||
           event.affectsConfiguration(collapseLargeTaskTreeConfigPath) ||
+          event.affectsConfiguration(taskSortOrderConfigPath) ||
           event.affectsConfiguration(favoritesConfigPath)
         ) {
           void this.refresh();
@@ -148,6 +159,7 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
     const treeItemMap = new Map<string, TaskTreeItem>();
     const tasks = await TaskTreeDataProvider.getTasks();
     const favoriteTaskIds = new Set(TaskTreeDataProvider.getFavoriteTaskIds());
+    const taskSortOrder = TaskTreeDataProvider.getTaskSortOrder();
     for (const task of tasks) {
       // Add scope item if not exist
       const scope = task.scope ?? vscode.TaskScope.Global;
@@ -188,7 +200,7 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
     const treeItems = Array.from(treeItemMap.values()).filter(
       (item) => item.type === TaskTreeItemType.scope,
     );
-    TaskTreeDataProvider.sortTree(treeItems);
+    TaskTreeDataProvider.sortTree(treeItems, taskSortOrder);
 
     // If only one scope, lift its children to top level to reduce nesting
     const rootItems =
@@ -272,6 +284,45 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
       ) ||
       compareStrings(x.path, y.path)
     );
+  }
+
+  private static getTaskSortOrder(): TaskSortOrder {
+    const taskSortOrder = vscode.workspace
+      .getConfiguration(taskManagerName)
+      .get(taskSortOrderConfigKey);
+
+    return taskSortOrder === "group" || taskSortOrder === "provider"
+      ? taskSortOrder
+      : "label";
+  }
+
+  private static compareTaskGroups(
+    x: vscode.Task | undefined,
+    y: vscode.Task | undefined,
+  ): number {
+    const xGroup = x?.group;
+    const yGroup = y?.group;
+    if (!xGroup && !yGroup) {
+      return 0;
+    }
+
+    if (!xGroup) {
+      return 1;
+    }
+
+    if (!yGroup) {
+      return -1;
+    }
+
+    return (
+      TaskTreeDataProvider.getTaskGroupRank(xGroup) -
+        TaskTreeDataProvider.getTaskGroupRank(yGroup) ||
+      compareStrings(xGroup.id, yGroup.id)
+    );
+  }
+
+  private static getTaskGroupRank(group: vscode.TaskGroup): number {
+    return taskGroupOrder.get(group.id) ?? taskGroupOrder.size;
   }
 
   private static getTreeItemLabel(item: vscode.TreeItem): string {
@@ -432,11 +483,37 @@ export class TaskTreeDataProvider implements vscode.TreeDataProvider<TaskTreeIte
     return collapseLargeTaskTree && rootItems.length > 3 && taskCount > 30;
   }
 
-  private static sortTree(tree: TaskTreeItem[]): void {
-    tree.sort((x, y) => TaskTreeItem.compare(x, y));
+  private static compareTreeItems(
+    x: TaskTreeItem,
+    y: TaskTreeItem,
+    taskSortOrder: TaskSortOrder,
+  ): number {
+    if (x.type === TaskTreeItemType.task && y.type === TaskTreeItemType.task) {
+      if (taskSortOrder === "provider") {
+        return 0;
+      }
+
+      if (taskSortOrder === "group") {
+        return (
+          TaskTreeDataProvider.compareTaskGroups(x.task, y.task) ||
+          TaskTreeItem.compare(x, y)
+        );
+      }
+    }
+
+    return TaskTreeItem.compare(x, y);
+  }
+
+  private static sortTree(
+    tree: TaskTreeItem[],
+    taskSortOrder: TaskSortOrder,
+  ): void {
+    tree.sort((x, y) =>
+      TaskTreeDataProvider.compareTreeItems(x, y, taskSortOrder),
+    );
     for (const item of tree) {
       if (item.children.length > 0) {
-        this.sortTree(item.children);
+        this.sortTree(item.children, taskSortOrder);
       }
     }
   }
