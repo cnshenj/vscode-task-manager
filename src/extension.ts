@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 
+import { createTaskStateChangeHandler } from "./task-state";
 import { TaskTreeDataProvider } from "./task-tree-data-provider";
 import { TaskTreeItem } from "./task-tree-item";
 
@@ -16,6 +17,8 @@ export function activate(context: vscode.ExtensionContext) {
     void taskTreeDataProvider.refresh();
     updateViewBadge();
   };
+  const updateTreeViewAfterTaskStateChanges =
+    createTaskStateChangeHandler(updateTreeView);
 
   const refreshTasksCommand = vscode.commands.registerCommand(
     "task-manager-tasks.refresh",
@@ -79,19 +82,25 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(favoriteTaskCommand);
   context.subscriptions.push(unfavoriteTaskCommand);
 
-  vscode.tasks.onDidStartTask(updateTreeView);
-  vscode.tasks.onDidEndTask((event) => {
-    updateTreeView();
-    const task = event.execution.task;
-    if (restartingTasks.has(task)) {
-      restartingTasks.delete(task);
-      vscode.tasks.executeTask(task);
-    }
-  });
   treeView = vscode.window.createTreeView("task-manager-tasks", {
     treeDataProvider: taskTreeDataProvider,
     showCollapseAll: true,
   });
+  context.subscriptions.push(treeView);
+
+  context.subscriptions.push(
+    vscode.tasks.onDidStartTask(updateTreeViewAfterTaskStateChanges),
+  );
+  context.subscriptions.push(
+    vscode.tasks.onDidEndTask((event) => {
+      updateTreeViewAfterTaskStateChanges();
+      const task = event.execution.task;
+      if (restartingTasks.has(task)) {
+        restartingTasks.delete(task);
+        vscode.tasks.executeTask(task);
+      }
+    }),
+  );
 }
 
 // this method is called when your extension is deactivated
