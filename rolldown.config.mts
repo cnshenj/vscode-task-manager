@@ -6,6 +6,9 @@ export default defineConfig({
   input: "src/extension.ts",
   external: ["vscode"],
   platform: "node",
+  resolve: {
+    mainFields: ["module", "main"],
+  },
   output: {
     format: "cjs",
     minify: production,

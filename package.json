@@ -32,6 +32,9 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check"
   },
+  "dependencies": {
+    "jsonc-parser": "^3.3.1"
+  },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.0.0",
@@ -72,6 +75,12 @@
         "title": "Run Task",
         "category": "Task Manager",
         "icon": "$(debug-start)"
+      },
+      {
+        "command": "task-manager-tasks.viewSource",
+        "title": "View Source",
+        "category": "Task Manager",
+        "icon": "$(go-to-file)"
       },
       {
         "command": "task-manager-tasks.terminate",
@@ -135,6 +144,10 @@
           "when": "false"
         },
         {
+          "command": "task-manager-tasks.viewSource",
+          "when": "false"
+        },
+        {
           "command": "task-manager-tasks.terminate",
           "when": "false"
         },
@@ -174,24 +187,29 @@
           "group": "inline@1"
         },
         {
-          "command": "task-manager-tasks.terminate",
-          "when": "view == task-manager-tasks && (viewItem == runningTask || viewItem == runningFavoriteTask)",
+          "command": "task-manager-tasks.viewSource",
+          "when": "view == task-manager-tasks && (viewItem == task || viewItem == favoriteTask || viewItem == runningTask || viewItem == runningFavoriteTask)",
           "group": "inline@2"
         },
         {
-          "command": "task-manager-tasks.restart",
+          "command": "task-manager-tasks.terminate",
           "when": "view == task-manager-tasks && (viewItem == runningTask || viewItem == runningFavoriteTask)",
           "group": "inline@3"
         },
         {
+          "command": "task-manager-tasks.restart",
+          "when": "view == task-manager-tasks && (viewItem == runningTask || viewItem == runningFavoriteTask)",
+          "group": "inline@4"
+        },
+        {
           "command": "task-manager-tasks.favorite",
           "when": "view == task-manager-tasks && (viewItem == task || viewItem == runningTask)",
-          "group": "inline@4"
+          "group": "inline@5"
         },
         {
           "command": "task-manager-tasks.unfavorite",
           "when": "view == task-manager-tasks && (viewItem == favoriteTask || viewItem == runningFavoriteTask)",
-          "group": "inline@4"
+          "group": "inline@5"
         }
       ]
     },

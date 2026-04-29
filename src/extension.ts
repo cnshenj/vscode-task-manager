@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 
+import { openTaskSourceDocument } from "./task-source";
 import { createTaskStateChangeHandler } from "./task-state";
 import { TaskTreeDataProvider } from "./task-tree-data-provider";
 import { TaskTreeItem } from "./task-tree-item";
@@ -44,6 +45,43 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.tasks.executeTask(taskTreeItem.task!);
     },
   );
+  const viewTaskSourceCommand = vscode.commands.registerCommand(
+    "task-manager-tasks.viewSource",
+    async (taskTreeItem: TaskTreeItem) => {
+      const task = taskTreeItem.task;
+      if (!task) {
+        return;
+      }
+
+      try {
+        const sourceDocument = await openTaskSourceDocument(task);
+        if (!sourceDocument) {
+          await vscode.window.showInformationMessage(
+            `Unsupported task source: ${task.source}`,
+          );
+          return;
+        }
+
+        const sourceRange = new vscode.Range(
+          sourceDocument.position,
+          sourceDocument.position,
+        );
+
+        const editor = await vscode.window.showTextDocument(
+          sourceDocument.document,
+          {
+            selection: sourceRange,
+          },
+        );
+
+        editor.revealRange(sourceRange, vscode.TextEditorRevealType.InCenter);
+      } catch {
+        await vscode.window.showWarningMessage(
+          `Unable to open task source for "${task.name}".`,
+        );
+      }
+    },
+  );
   const terminateTaskCommand = vscode.commands.registerCommand(
     "task-manager-tasks.terminate",
     (taskTreeItem: TaskTreeItem) => {
@@ -77,6 +115,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(configureTaskCommand);
   context.subscriptions.push(terminateAllTasksCommand);
   context.subscriptions.push(runTaskCommand);
+  context.subscriptions.push(viewTaskSourceCommand);
   context.subscriptions.push(terminateTaskCommand);
   context.subscriptions.push(restartTaskCommand);
   context.subscriptions.push(favoriteTaskCommand);
